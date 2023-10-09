@@ -194,3 +194,7 @@ matrices, coeffs, loss_hist = get_optimized_matrices(2, 100, num_iters = 1000)
 
 plt.plot(loss_hist)
 print([np.trace(mat) for mat in matrices])
+
+
+# In this way, since we end up with trace 1 matrices, the cost goes to 1/6 for f=2. This is not optimal.
+# -> Need to use an alternative to make_hermitian.
