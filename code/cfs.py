@@ -134,7 +134,7 @@ def loss_fn(params):
     """
     mat, cvals = params
     herm = vectorized_make_hermitian(mat)
-    herm = herm/jnp.trace(herm,axis1=1,axis2=2) # This sets axis to 1, however, may mess ordering of eigenvalues assumed in approach!
+    herm = herm/(jnp.trace(herm,axis1=1,axis2=2)[0,None,None]) # This sets axis to 1, however, may mess ordering of eigenvalues assumed in approach!
     #Better here: Incorporate trace constraints/assumptions into new version of make hermitian(?)
     cvals = jax.nn.softmax(cvals)
     # herm = vectorized_trace_normalization(herm)
@@ -183,6 +183,7 @@ def get_optimized_matrices(dim, num_ops, num_iters = 1000):
         loss_hist.append(loss_fn(params))
 
     herm = vectorized_make_hermitian(params[0])
+    herm = herm/jnp.trace(herm,axis1=1,axis2=2)[:,None,None] # need this as long as trace normalization is not part of hermitianization function
     cvals = jax.nn.softmax(params[1])
     # herm = vectorized_trace_normalization(herm)
 
