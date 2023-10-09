@@ -12,9 +12,11 @@ def make_hermitian(mat, n: int) -> jnp.array:
 
     Args:
         mat (array[complex]): A random matrix.
-        n (int, optional): The number of positive/negative eigenvalues.
-                           Defaults to 2.
+        n (int, optional): The number of positive/negative eigenvalues. (In total 2n non-zero eigenvalues.)
     """
+    
+    #Note that n> dim(mat) is not checked!
+    
     T = (mat + mat.T.conj()) / 2
 
     eigvals, eigvecs = jnp.linalg.eigh(T)
@@ -25,6 +27,11 @@ def make_hermitian(mat, n: int) -> jnp.array:
 
     return jnp.dot(eigvecs, (eigvals * eigvecs.conj()).T)
 
+# The vectorized version giving results of shape ( m x dim x dim), where dim is Hilbert space dimension, m is number of matrices being passed to the function
+# n is set externally! it is the spin dimension (number of positive and negative eigenvalues, see above)
+vectorized_make_hermitian = jax.jit(
+    jax.vmap(lambda mat: make_hermitian(mat, n), in_axes=[0])
+)
 
 def generate_random_mat(dim):
     """Generates a random matrix.
@@ -58,6 +65,11 @@ def lagrangian(x, y):
     eigvals = jnp.linalg.eigvals(x @ y)
     return (1 / 4) * jnp.sum(vectorized_diff(eigvals, eigvals) ** 2)/n
 
+# The vectorized version giving results of shape (m x m), where m is number of points passed to the function
+vectorized_lagrangian = jax.jit(
+    jax.vmap(jax.vmap(lagrangian, in_axes=[0, None]), in_axes=[None, 0])
+)
+
 
 def cprod(c1, c2):
     """Simple product of two numbers that we will vectorize for both arrays
@@ -72,20 +84,12 @@ def cprod(c1, c2):
     return c1 * c2
 
 
-# The vectorized product of size dim(c1)*dim(c2).
+# The vectorized product of shape (dim(c2),dim(c1)).
 vectorized_cprod = jax.jit(
     jax.vmap(jax.vmap(cprod, in_axes=[0, None]), in_axes=[None, 0])
 )
 
-# The vectorized version giving results of shape (n x n x N x N)
-vectorized_make_hermitian = jax.jit(
-    jax.vmap(lambda mat: make_hermitian(mat, n), in_axes=[0])
-)
 
-# The vectorized version giving results of shape (n x n)
-vectorized_lagrangian = jax.jit(
-    jax.vmap(jax.vmap(lagrangian, in_axes=[0, None]), in_axes=[None, 0])
-)
 
 
 def cost(hermitian_ops, cvals):
