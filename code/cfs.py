@@ -89,9 +89,6 @@ vectorized_cprod = jax.jit(
     jax.vmap(jax.vmap(cprod, in_axes=[0, None]), in_axes=[None, 0])
 )
 
-
-
-
 def cost(hermitian_ops, cvals):
     """Cost function to optimize.
 
@@ -130,14 +127,15 @@ def loss_fn(params):
     """A loss function to optimize.
 
     Args:
-        params (tuple of two arrays): The 
+        params (tuple of two arrays): The first array is a vector of spacetime point operators, the second array is a vector of the corresponding weights.
 
     Returns:
         _type_: _description_
     """
     mat, cvals = params
     herm = vectorized_make_hermitian(mat)
-    herm = herm/jnp.trace(herm)
+    herm = herm/jnp.trace(herm,axis1=1,axis2=2) # This sets axis to 1, however, may mess ordering of eigenvalues assumed in approach!
+    #Better here: Incorporate trace constraints/assumptions into new version of make hermitian(?)
     cvals = jax.nn.softmax(cvals)
     # herm = vectorized_trace_normalization(herm)
     loss_val = cost(herm, cvals)
