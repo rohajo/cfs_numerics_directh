@@ -62,7 +62,7 @@ def lagrangian(x, y):
         x (array[complex]): Hermitian matrix 1
         y (array[complex]): Hermitian matrix 2
     """
-    eigvals = jnp.linalg.eigvals(x @ y)
+    eigvals = (jnp.linalg.eigvals(x @ y))[:2*n]
     return (1 / 4) * jnp.sum(vectorized_diff(eigvals, eigvals) ** 2)/n
 
 # The vectorized version giving results of shape (m x m), where m is number of points passed to the function
